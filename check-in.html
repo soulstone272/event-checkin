@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cổng Check-in Sự Kiện</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        h2 { color: #1a1a1a; margin-bottom: 10px; }
+        p { color: #666; margin-bottom: 30px; }
+        input { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 18px; margin-bottom: 20px; box-sizing: border-box; outline: none; transition: 0.3s; }
+        input:focus { border-color: #00f2ff; box-shadow: 0 0 10px rgba(0,242,255,0.2); }
+        button { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #0056b3; transform: translateY(-2px); }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        #message { margin-top: 20px; font-weight: 500; min-height: 24px; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>CHECK-IN</h2>
+    <p>Nhập đúng tên User để sáng đèn</p>
+    
+    <input type="text" id="inputName" placeholder="Tên khách hàng..." autocomplete="off">
+    <button id="btnCheckin">XÁC NHẬN</button>
+    
+    <div id="message"></div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { 
+        getFirestore, collection, query, where, getDocs, updateDoc, doc 
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    // Cấu hình Firebase (Dùng chung với file Index của bạn)
+    const firebaseConfig = {
+        apiKey: "AIzaSyAdmwwhCZh3MS7vM03MiL_FTIluqQNmFxo",
+        authDomain: "checkin-69311.firebaseapp.com",
+        projectId: "checkin-69311",
+        storageBucket: "checkin-69311.firebasestorage.app",
+        messagingSenderId: "682738949510",
+        appId: "1:682738949510:web:760eb6c7d591af6fb16007"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const inputName = document.getElementById('inputName');
+    const btnCheckin = document.getElementById('btnCheckin');
+    const message = document.getElementById('message');
+
+    async function processCheckin() {
+        const name = inputName.value.trim();
+        if (!name) return;
+
+        // Khóa nút để tránh bấm liên tục
+        btnCheckin.disabled = true;
+        message.innerText = "Đang xử lý...";
+        message.className = "";
+
+        try {
+            // 1. Tìm document có user_name trùng với input
+            const q = query(collection(db, "user"), where("user_name", "==", name));
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                message.innerText = "❌ Không tìm thấy tên này!";
+                message.className = "error";
+            } else {
+                // 2. Cập nhật is_active thành true cho tất cả kết quả tìm được
+                const updatePromises = querySnapshot.docs.map(userDoc => 
+                    updateDoc(doc(db, "user", userDoc.id), { is_active: true })
+                );
+                
+                await Promise.all(updatePromises);
+
+                message.innerText = `✅ Đã check-in cho: ${name}`;
+                message.className = "success";
+                inputName.value = ""; // Xóa trắng ô nhập
+            }
+        } catch (error) {
+            console.error(error);
+            message.innerText = "Lỗi hệ thống!";
+            message.className = "error";
+        } finally {
+            btnCheckin.disabled = false;
+        }
+    }
+
+    // Sự kiện Click nút
+    btnCheckin.addEventListener('click', processCheckin);
+
+    // Sự kiện nhấn phím Enter
+    inputName.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') processCheckin();
+    });
+</script>
+
+</body>
+</html>
