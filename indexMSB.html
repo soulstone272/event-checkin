@@ -2,120 +2,82 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Màn Hình Hiển Thị 10x13 - Orange Neon</title>
+    <title>Màn Hình Hiển Thị 10x13 - Final Image Overlay</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        body { background: #000; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        body { background: #000; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: sans-serif; }
         
+        /* Container chính */
+        #main-wrapper { position: relative; width: 98vw; height: 95vh; }
+
         .grid-container {
             display: grid;
             grid-template-columns: repeat(13, 1fr);
             grid-template-rows: repeat(10, 1fr);
             gap: 5px;
-            width: 98vw;
-            height: 95vh;
+            width: 100%;
+            height: 100%;
+            transition: opacity 2s ease, transform 2s ease;
         }
 
-        .cell {
-            position: relative;
-            background: #111;
-            border-radius: 4px;
-            perspective: 1000px;
+        /* Khi kết thúc, làm mờ lưới ảnh */
+        .grid-container.fade-out {
+            opacity: 0.2;
+            transform: scale(0.9);
+            filter: blur(5px);
         }
 
-        .cell-inner {
-            position: relative;
-            width: 100%; height: 100%;
-            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-            transform-style: preserve-3d;
-        }
+        /* --- CELL STYLE --- */
+        .cell { position: relative; background: #111; border-radius: 4px; perspective: 1000px; }
+        .cell-inner { position: relative; width: 100%; height: 100%; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
+        .cell.active .cell-inner { transform: rotateY(180deg); }
+        .face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 4px; border: 1px solid #222; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        .face-front { background: #111; color: rgba(255, 140, 0, 0.4); font-size: 11px; font-weight: bold; }
+        .face-back { background: #000; transform: rotateY(180deg); }
+        .face-back img { width: 100%; height: 100%; object-fit: cover; }
+        .cell.active .face-back { border: 2px solid #ff8c00; box-shadow: 0 0 10px #ff8c00; }
 
-        /* Hiệu ứng lật khi Active */
-        .cell.active .cell-inner {
-            transform: rotateY(180deg);
-        }
-
-        .face {
+        /* --- ẢNH CUỐI CÙNG (FINAL IMAGE) --- */
+        #final-overlay {
             position: absolute;
             inset: 0;
-            backface-visibility: hidden;
-            border-radius: 4px;
-            border: 1px solid #222;
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
-        }
-
-        /* Mặt trước hiện tên */
-        .face-front {
-            background: #111;
-            color: rgba(255, 165, 0, 0.5); /* Chữ màu cam mờ */
-            font-size: 11px;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        /* Mặt sau hiện ảnh */
-        .face-back {
-            background: #000;
-            transform: rotateY(180deg);
-            border: 1px solid #332200;
-        }
-
-        .face-back img {
-            width: 100%; height: 100%; object-fit: cover;
-        }
-
-        /* VIỀN MÀU CAM NEON & HIỆU ỨNG LÓE SÁNG */
-        .cell.active .face-back {
-            border: 2px solid #ff8c00; /* Màu Cam đậm */
-            box-shadow: 0 0 15px #ff8c00, 0 0 30px rgba(255, 140, 0, 0.3);
-        }
-
-        /* Hiệu ứng tia sáng quét qua khi vừa lật xong */
-        .cell.active .face-back::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: -150%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.4),
-                transparent
-            );
-            transform: skewX(-20deg);
-            animation: shine 0.8s ease-in-out 0.5s;
-        }
-
-        @keyframes shine {
-            0% { left: -150%; }
-            100% { left: 150%; }
-        }
-
-        /* Hiệu ứng bùng sáng (Flash) khi mặt ảnh vừa xuất hiện */
-        .cell.active .face-back::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: white;
-            z-index: 2;
             opacity: 0;
-            animation: flash 0.6s ease-out;
+            transform: scale(0.5);
+            transition: all 2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            z-index: 100;
         }
 
-        @keyframes flash {
-            0% { opacity: 0; }
-            20% { opacity: 0.6; }
-            100% { opacity: 0; }
+        #final-overlay.show {
+            opacity: 1;
+            transform: scale(1);
         }
+
+        #final-overlay img {
+            max-width: 80%;
+            max-height: 80%;
+            border: 5px solid #ff8c00;
+            box-shadow: 0 0 50px #ff8c00;
+            border-radius: 15px;
+        }
+
+        .counter { position: absolute; top: 10px; left: 15px; color: #ff8c00; font-size: 14px; z-index: 10; }
     </style>
 </head>
 <body>
 
-    <div id="grid" class="grid-container"></div>
+    <div id="main-wrapper">
+        <div class="counter" id="checkin-count">0/130</div>
+        
+        <div id="grid" class="grid-container"></div>
+
+        <div id="final-overlay">
+            <img src="https://firebasestorage.googleapis.com/v0/b/checkin-69311.firebasestorage.app/o/MSB_logo_1.png?alt=media&token=8791a15f-0a25-4a85-8ae6-f9adf61657e1" id="final-img">
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
@@ -134,8 +96,11 @@
         const db = getFirestore(app);
 
         const grid = document.getElementById('grid');
+        const finalOverlay = document.getElementById('final-overlay');
         const userCells = {}; 
+        let hasFired = false; 
 
+        // Khởi tạo Grid
         for (let i = 1; i <= 130; i++) {
             const cell = document.createElement('div');
             cell.className = 'cell';
@@ -149,25 +114,46 @@
             userCells[i] = cell;
         }
 
+        function launchFireworks() {
+            const duration = 10 * 1000; // Bắn pháo hoa 10 giây
+            const end = Date.now() + duration;
+
+            (function frame() {
+                confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#ff8c00', '#ffffff'] });
+                confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#ff8c00', '#ffffff'] });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                } else {
+                    // SAU KHI PHÁO HOA KẾT THÚC: Hiện ảnh cuối
+                    grid.classList.add('fade-out');
+                    finalOverlay.classList.add('show');
+                }
+            }());
+        }
+
         const q = query(collection(db, "user"), orderBy("id", "asc"));
         onSnapshot(q, (snapshot) => {
+            let activeCount = 0;
             snapshot.docs.forEach(doc => {
                 const data = doc.data();
                 const cell = userCells[data.id];
                 if (cell) {
                     const img = cell.querySelector('img');
-                    const front = cell.querySelector('.face-front');
-                    
                     if (data.url_images && img.src !== data.url_images) img.src = data.url_images;
-                    if (data.user_name) front.textContent = data.user_name;
-
                     if (data.is_active) {
                         cell.classList.add('active');
-                    } else {
-                        cell.classList.remove('active');
+                        activeCount++;
                     }
                 }
             });
+
+            document.getElementById('checkin-count').textContent = `Check-in: ${activeCount}/130`;
+
+            if (activeCount >= 31 && !hasFired) {
+                hasFired = true;
+                launchFireworks();
+            }
         });
     </script>
 </body>
