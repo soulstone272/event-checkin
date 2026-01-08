@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Màn Hình Hiển Thị 10x13</title>
+    <title>Màn Hình Hiển Thị 10x13 - Orange Neon</title>
     <style>
         body { background: #000; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         
@@ -16,28 +16,100 @@
         }
 
         .cell {
+            position: relative;
             background: #111;
             border-radius: 4px;
-            overflow: hidden;
+            perspective: 1000px;
+        }
+
+        .cell-inner {
+            position: relative;
+            width: 100%; height: 100%;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        /* Hiệu ứng lật khi Active */
+        .cell.active .cell-inner {
+            transform: rotateY(180deg);
+        }
+
+        .face {
+            position: absolute;
+            inset: 0;
+            backface-visibility: hidden;
+            border-radius: 4px;
             border: 1px solid #222;
-            transition: all 0.6s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
         }
 
-        .cell img {
+        /* Mặt trước hiện tên */
+        .face-front {
+            background: #111;
+            color: rgba(255, 165, 0, 0.5); /* Chữ màu cam mờ */
+            font-size: 11px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* Mặt sau hiện ảnh */
+        .face-back {
+            background: #000;
+            transform: rotateY(180deg);
+            border: 1px solid #332200;
+        }
+
+        .face-back img {
             width: 100%; height: 100%; object-fit: cover;
-            filter: grayscale(100%) brightness(0.1); /* Mặc định tối đen */
-            transition: 0.8s;
         }
 
-        /* Hiệu ứng khi được check-in */
-        .cell.active {
-            border: 2px solid #00f2ff;
-            box-shadow: 0 0 15px #00f2ff;
-            transform: scale(1.02);
+        /* VIỀN MÀU CAM NEON & HIỆU ỨNG LÓE SÁNG */
+        .cell.active .face-back {
+            border: 2px solid #ff8c00; /* Màu Cam đậm */
+            box-shadow: 0 0 15px #ff8c00, 0 0 30px rgba(255, 140, 0, 0.3);
         }
 
-        .cell.active img {
-            filter: grayscale(0%) brightness(1);
+        /* Hiệu ứng tia sáng quét qua khi vừa lật xong */
+        .cell.active .face-back::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -150%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.4),
+                transparent
+            );
+            transform: skewX(-20deg);
+            animation: shine 0.8s ease-in-out 0.5s;
+        }
+
+        @keyframes shine {
+            0% { left: -150%; }
+            100% { left: 150%; }
+        }
+
+        /* Hiệu ứng bùng sáng (Flash) khi mặt ảnh vừa xuất hiện */
+        .cell.active .face-back::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: white;
+            z-index: 2;
+            opacity: 0;
+            animation: flash 0.6s ease-out;
+        }
+
+        @keyframes flash {
+            0% { opacity: 0; }
+            20% { opacity: 0.6; }
+            100% { opacity: 0; }
         }
     </style>
 </head>
@@ -46,11 +118,8 @@
     <div id="grid" class="grid-container"></div>
 
     <script type="module">
-	    import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getFirestore, collection, query, orderBy, onSnapshot } 
-
-        from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAdmwwhCZh3MS7vM03MiL_FTIluqQNmFxo",
@@ -63,47 +132,41 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-		
-		async function initData() {
-            for (let i = 1; i <= 130; i++) {
-                const userRef = doc(db, "user", `user_${i}`);
-                try {
-                    await setDoc(userRef, {
-                        id: i,
-                        user_name: `User ${i}`,
-                        url_images: `https://picsum.photos/id/${i}/200/200`,
-                        is_active: false,
-                        create_at: serverTimestamp()
-                    });
-                    console.log(`Đã tạo: user_${i}`);
-                } catch (e) {
-                    console.error("Lỗi: ", e);
-                }
-            }
-            alert("Hoàn tất khởi tạo 130 User!");
+
+        const grid = document.getElementById('grid');
+        const userCells = {}; 
+
+        for (let i = 1; i <= 130; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.innerHTML = `
+                <div class="cell-inner">
+                    <div class="face face-front">USER ${i}</div>
+                    <div class="face face-back"><img src=""></div>
+                </div>
+            `;
+            grid.appendChild(cell);
+            userCells[i] = cell;
         }
-		//initData();
 
-        // Lấy collection "user" (đúng theo tên trong ảnh bạn chụp)
         const q = query(collection(db, "user"), orderBy("id", "asc"));
-
         onSnapshot(q, (snapshot) => {
-            const grid = document.getElementById('grid');
-            grid.innerHTML = '';
-
-            snapshot.forEach((doc) => {
+            snapshot.docs.forEach(doc => {
                 const data = doc.data();
-                const cell = document.createElement('div');
-                
-                // Kiểm tra trạng thái is_active để sáng đèn
-                cell.className = `cell ${data.is_active ? 'active' : ''}`;
-                
-                const img = document.createElement('img');
-                // Khớp với trường url_images trong ảnh của bạn
-                img.src = data.url_images || 'https://via.placeholder.com/150'; 
-                
-                cell.appendChild(img);
-                grid.appendChild(cell);
+                const cell = userCells[data.id];
+                if (cell) {
+                    const img = cell.querySelector('img');
+                    const front = cell.querySelector('.face-front');
+                    
+                    if (data.url_images && img.src !== data.url_images) img.src = data.url_images;
+                    if (data.user_name) front.textContent = data.user_name;
+
+                    if (data.is_active) {
+                        cell.classList.add('active');
+                    } else {
+                        cell.classList.remove('active');
+                    }
+                }
             });
         });
     </script>
