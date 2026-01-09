@@ -2,11 +2,10 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>MSB Event - Red Orange & White Theme</title>
+    <title>MSB Event - Cinematic Slow Black Hole</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body { 
-            /* Nền gradient Đỏ Cam đặc trưng */
             background: radial-gradient(circle, #ff4d00, #cc3d00); 
             margin: 0; 
             display: flex; 
@@ -19,6 +18,22 @@
         
         #main-wrapper { position: relative; width: 98vw; height: 95vh; }
 
+        .counter { 
+            position: absolute; 
+            top: 10px; 
+            left: 15px; 
+            color: #ffffff; 
+            font-size: 24px; 
+            font-weight: bold;
+            z-index: 100; 
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.3);
+            transition: opacity 1s ease;
+        }
+
         .grid-container {
             display: grid;
             grid-template-columns: repeat(13, 1fr);
@@ -26,16 +41,9 @@
             gap: 5px;
             width: 100%;
             height: 100%;
-            transition: opacity 2s ease, transform 2s ease;
+            transition: all 2.5s ease-in-out; /* Tăng thời gian scale grid */
         }
 
-        .grid-container.fade-out {
-            opacity: 0.15;
-            transform: scale(0.9);
-            filter: blur(8px);
-        }
-
-        /* --- CELL STYLE --- */
         .cell { 
             position: relative; 
             background: rgba(255, 255, 255, 0.1); 
@@ -57,28 +65,15 @@
             inset: 0; 
             backface-visibility: hidden; 
             border-radius: 4px; 
-            border: 1px solid rgba(255, 255, 255, 0.4); /* Viền trắng mờ mặt trước */
+            border: 1px solid rgba(255, 255, 255, 0.4); 
             display: flex; 
             justify-content: center; 
             align-items: center; 
             overflow: hidden; 
         }
 
-        /* Mặt trước: Nền đỏ cam, chữ trắng */
-        .face-front { 
-            background: #ff4d00; 
-            color: #ffffff; 
-            font-size: 11px; 
-            font-weight: bold; 
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-        }
-
-        /* Mặt sau: Ảnh với viền trắng rực rỡ */
-        .face-back { 
-            background: #000; 
-            transform: rotateY(180deg); 
-        }
-
+        .face-front { background: #ff4d00; color: #ffffff; font-size: 11px; font-weight: bold; }
+        .face-back { background: #000; transform: rotateY(180deg); }
         .face-back img { width: 100%; height: 100%; object-fit: cover; }
 
         .cell.active .face-back { 
@@ -86,7 +81,13 @@
             box-shadow: 0 0 15px rgba(255, 255, 255, 0.8); 
         }
 
-        /* --- ẢNH CUỐI CÙNG --- */
+        /* Hiệu ứng hút chậm hơn và xoay nhiều vòng hơn */
+        .cell.sucked {
+            transition: all 2.5s cubic-bezier(0.5, 0, 0.5, 1); /* Tăng từ 1s lên 2.5s */
+            transform: scale(0) rotate(1440deg) translateZ(-1000px); /* Xoay 4 vòng thay vì 2 */
+            opacity: 0;
+        }
+
         #final-overlay {
             position: absolute;
             inset: 0;
@@ -94,43 +95,37 @@
             justify-content: center;
             align-items: center;
             opacity: 0;
-            transform: scale(0.5);
-            transition: all 2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
             pointer-events: none;
-            z-index: 100;
         }
 
-        #final-overlay.show {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        #final-overlay img {
+        #final-img {
             max-width: 80%;
             max-height: 80%;
             border: 6px solid #ffffff;
             box-shadow: 0 0 50px rgba(255, 255, 255, 0.7);
             border-radius: 20px;
             background: #ffffff;
+            transform: scale(0.2);
+            transition: all 3s cubic-bezier(0.175, 0.885, 0.32, 1.1); /* Hiện logo chậm hơn */
         }
 
-        .counter { 
-            position: absolute; 
-            top: 10px; 
-            left: 15px; 
-            color: #ffffff; 
-            font-size: 16px; 
-            font-weight: bold;
-            z-index: 10; 
-            text-shadow: 0 0 10px rgba(0,0,0,0.3);
+        #final-overlay.show #final-img { transform: scale(1); }
+
+        canvas#vortex {
+            position: absolute;
+            top: 0; left: 0;
+            pointer-events: none;
+            z-index: 500;
         }
     </style>
 </head>
 <body>
 
     <div id="main-wrapper">
+        <div class="counter" id="checkin-counter">CHECK-IN: 0 / 130</div>
+        <canvas id="vortex"></canvas>
         <div id="grid" class="grid-container"></div>
-
         <div id="final-overlay">
             <img src="https://firebasestorage.googleapis.com/v0/b/checkin-69311.firebasestorage.app/o/MSB_logo_1.png?alt=media&token=8791a15f-0a25-4a85-8ae6-f9adf61657e1" id="final-img">
         </div>
@@ -148,73 +143,102 @@
             messagingSenderId: "682738949510",
             appId: "1:682738949510:web:760eb6c7d591af6fb16007"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
         const grid = document.getElementById('grid');
+        const counterEl = document.getElementById('checkin-counter');
         const finalOverlay = document.getElementById('final-overlay');
-        const userCells = {}; 
-        let hasFired = false; 
+        const canvas = document.getElementById('vortex');
+        const ctx = canvas.getContext('2d');
+        const userCells = {};
+        let hasTriggered = false;
 
-        // Khởi tạo Grid
         for (let i = 1; i <= 130; i++) {
             const cell = document.createElement('div');
             cell.className = 'cell';
-            cell.innerHTML = `
-                <div class="cell-inner">
-                    <div class="face face-front">USER ${i}</div>
-                    <div class="face face-back"><img src=""></div>
-                </div>
-            `;
+            cell.innerHTML = `<div class="cell-inner"><div class="face face-front">USER ${i}</div><div class="face face-back"><img src=""></div></div>`;
             grid.appendChild(cell);
             userCells[i] = cell;
         }
 
-        function launchFireworks() {
-            const duration = 12 * 1000; 
-            const end = Date.now() + duration;
+        let particles = [];
+        function createParticles(x, y) {
+            for(let i=0; i<10; i++) {
+                particles.push({
+                    x, y,
+                    vx: (Math.random() - 0.5) * 8, // Giảm tốc độ văng để hạt tụ chậm lại
+                    vy: (Math.random() - 0.5) * 8,
+                    life: 1,
+                    decay: Math.random() * 0.003 + 0.002, // Giảm tốc độ biến mất (hạt sống lâu hơn)
+                    size: Math.random() * 2 + 1,
+                    color: Math.random() > 0.5 ? '#ffffff' : '#ffcc00'
+                });
+            }
+        }
 
+        function runProEffect() {
+            counterEl.style.opacity = "0"; 
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const cells = Array.from(document.querySelectorAll('.cell'));
+            
+            // Tăng delay hút từng thẻ lên 40ms (Tổng thời gian hút 130 thẻ khoảng ~5.2 giây)
+            cells.sort(() => Math.random() - 0.5).forEach((cell, index) => {
+                setTimeout(() => {
+                    const rect = cell.getBoundingClientRect();
+                    createParticles(rect.left + rect.width/2, rect.top + rect.height/2);
+                    cell.classList.add('sucked');
+                }, index * 40); 
+            });
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach((p, i) => {
+                    const dx = centerX - p.x;
+                    const dy = centerY - p.y;
+                    
+                    // Lực hút vào tâm yếu hơn để hạt xoáy nhiều vòng (chia cho 300 thay vì 150)
+                    p.vx += dx / 300;
+                    p.vy += dy / 300;
+                    
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life -= p.decay;
+
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.life;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                    ctx.fill();
+
+                    if(p.life <= 0) particles.splice(i, 1);
+                });
+                
+                requestAnimationFrame(animate);
+            }
+            animate();
+
+            // Hiện logo sau 7 giây (đảm bảo đủ thời gian cho các thẻ hút hết)
+            setTimeout(() => {
+                finalOverlay.classList.add('show');
+                finalOverlay.style.opacity = "1";
+                launchFinalFireworks();
+            }, 7000);
+        }
+
+        function launchFinalFireworks() {
+            const end = Date.now() + 10000; // Pháo hoa bắn lâu hơn (10s)
             (function frame() {
-                // Pháo hoa từ dưới lên với màu Trắng và Đỏ Cam
-                confetti({
-                    particleCount: 5,
-                    angle: 90,
-                    spread: 70,
-                    origin: { x: 0.5, y: 1.0 },
-                    colors: ['#ffffff', '#ff4d00', '#ffcc00'],
-                    ticks: 200,
-                    gravity: 1.2,
-                    scalar: 1.2
-                });
-
-                confetti({
-                    particleCount: 3,
-                    angle: 60,
-                    spread: 50,
-                    origin: { x: 0.1, y: 1.0 },
-                    colors: ['#ffffff', '#ff4d00']
-                });
-
-                confetti({
-                    particleCount: 3,
-                    angle: 120,
-                    spread: 50,
-                    origin: { x: 0.9, y: 1.0 },
-                    colors: ['#ffffff', '#ff4d00']
-                });
-
-                if (Date.now() < end) {
-                    requestAnimationFrame(frame);
-                } else {
-                    grid.classList.add('fade-out');
-                    finalOverlay.classList.add('show');
-                }
+                confetti({ particleCount: 5, angle: 60, spread: 60, origin: { x: 0, y: 0.8 }, colors: ['#ffffff', '#ff4d00'] });
+                confetti({ particleCount: 5, angle: 120, spread: 60, origin: { x: 1, y: 0.8 }, colors: ['#ffffff', '#ff4d00'] });
+                if (Date.now() < end) requestAnimationFrame(frame);
             }());
         }
 
-        const q = query(collection(db, "user"), orderBy("id", "asc"));
-        onSnapshot(q, (snapshot) => {
+        onSnapshot(query(collection(db, "user"), orderBy("id", "asc")), (snapshot) => {
             let activeCount = 0;
             snapshot.docs.forEach(doc => {
                 const data = doc.data();
@@ -225,14 +249,15 @@
                     if (data.is_active) {
                         cell.classList.add('active');
                         activeCount++;
-                    } else {
-                        cell.classList.remove('active');
                     }
                 }
             });
-            if (activeCount >= 31 && !hasFired) {
-                hasFired = true;
-                launchFireworks();
+
+            counterEl.innerText = `CHECK-IN: ${activeCount} / 130`;
+
+            if (activeCount >= 40 && !hasTriggered) {
+                hasTriggered = true;
+                setTimeout(runProEffect, 1500); // Đợi 1.5s sau khi đủ người mới bắt đầu xoáy
             }
         });
     </script>
