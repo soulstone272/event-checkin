@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>MSB Event - Cinematic Slow Black Hole</title>
+    <title>MSB Event - Professional Blurred Backdrop</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body { 
@@ -41,12 +41,12 @@
             gap: 5px;
             width: 100%;
             height: 100%;
-            transition: all 2.5s ease-in-out; /* Tăng thời gian scale grid */
+            transition: all 2.5s ease-in-out;
         }
 
         .cell { 
             position: relative; 
-            background: rgba(255, 255, 255, 0.1); 
+            background: rgba(255, 255, 255, 0.05); 
             border-radius: 4px; 
             perspective: 1000px; 
         }
@@ -65,26 +65,60 @@
             inset: 0; 
             backface-visibility: hidden; 
             border-radius: 4px; 
-            border: 1px solid rgba(255, 255, 255, 0.4); 
             display: flex; 
             justify-content: center; 
             align-items: center; 
             overflow: hidden; 
         }
 
-        .face-front { background: #ff4d00; color: #ffffff; font-size: 11px; font-weight: bold; }
-        .face-back { background: #000; transform: rotateY(180deg); }
-        .face-back img { width: 100%; height: 100%; object-fit: cover; }
-
-        .cell.active .face-back { 
-            border: 2px solid #ffffff; 
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8); 
+        .face-front { 
+            background: #ff4d00; 
+            color: #ffffff; 
+            font-size: 10px; 
+            font-weight: bold;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            padding: 2px;
         }
 
-        /* Hiệu ứng hút chậm hơn và xoay nhiều vòng hơn */
+        /* PHẦN XỬ LÝ CHUYÊN NGHIỆP: FACE BACK */
+        .face-back { 
+            background: #000; 
+            transform: rotateY(180deg); 
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        /* Lớp nền mờ phía sau */
+        .blurred-bg {
+            position: absolute;
+            inset: 0;
+            background-image: var(--bg-url);
+            background-size: cover;
+            background-position: center;
+            filter: blur(10px) brightness(0.7);
+            transform: scale(1.3); /* Phóng to nhẹ để mất viền trắng khi blur */
+            z-index: 1;
+        }
+
+        /* Ảnh chính phía trước */
+        .main-img { 
+            position: relative;
+            z-index: 2;
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; /* QUAN TRỌNG: Hiển thị đầy đủ ảnh không mất đầu */
+        }
+
+        .cell.active .face-back { 
+            border: 1.5px solid #ffffff; 
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5); 
+        }
+
+        /* Hiệu ứng hút vào lỗ đen */
         .cell.sucked {
-            transition: all 2.5s cubic-bezier(0.5, 0, 0.5, 1); /* Tăng từ 1s lên 2.5s */
-            transform: scale(0) rotate(1440deg) translateZ(-1000px); /* Xoay 4 vòng thay vì 2 */
+            transition: all 2.5s cubic-bezier(0.5, 0, 0.5, 1);
+            transform: scale(0) rotate(1440deg) translateZ(-1000px);
             opacity: 0;
         }
 
@@ -107,7 +141,7 @@
             border-radius: 20px;
             background: #ffffff;
             transform: scale(0.2);
-            transition: all 3s cubic-bezier(0.175, 0.885, 0.32, 1.1); /* Hiện logo chậm hơn */
+            transition: all 3s cubic-bezier(0.175, 0.885, 0.32, 1.1);
         }
 
         #final-overlay.show #final-img { transform: scale(1); }
@@ -123,11 +157,10 @@
 <body>
 
     <div id="main-wrapper">
-        <div class="counter" id="checkin-counter">CHECK-IN: 0 / 130</div>
         <canvas id="vortex"></canvas>
         <div id="grid" class="grid-container"></div>
         <div id="final-overlay">
-            <img src="https://firebasestorage.googleapis.com/v0/b/checkin-69311.firebasestorage.app/o/MSB_logo_1.png?alt=media&token=8791a15f-0a25-4a85-8ae6-f9adf61657e1" id="final-img">
+            <img src="https://firebasestorage.googleapis.com/v0/b/checkin-69311.firebasestorage.app/o/final.jpg?alt=media&token=2fd6e867-06ac-4344-bdf0-9b5a2dc3b309" id="final-img">
         </div>
     </div>
 
@@ -154,23 +187,33 @@
         const userCells = {};
         let hasTriggered = false;
 
+        // Khởi tạo lưới 130 ô
         for (let i = 1; i <= 130; i++) {
             const cell = document.createElement('div');
             cell.className = 'cell';
-            cell.innerHTML = `<div class="cell-inner"><div class="face face-front">USER ${i}</div><div class="face face-back"><img src=""></div></div>`;
+            cell.innerHTML = `
+                <div class="cell-inner">
+                    <div class="face face-front user-name">Hạng mục ${i}</div>
+                    <div class="face face-back">
+                        <div class="blurred-bg"></div>
+                        <img src="" class="main-img">
+                    </div>
+                </div>
+            `;
             grid.appendChild(cell);
             userCells[i] = cell;
         }
 
+        // --- Logic hiệu ứng hạt Vortex (Giữ nguyên từ code cũ) ---
         let particles = [];
         function createParticles(x, y) {
-            for(let i=0; i<10; i++) {
+            for(let i=0; i<8; i++) {
                 particles.push({
                     x, y,
-                    vx: (Math.random() - 0.5) * 8, // Giảm tốc độ văng để hạt tụ chậm lại
-                    vy: (Math.random() - 0.5) * 8,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
                     life: 1,
-                    decay: Math.random() * 0.003 + 0.002, // Giảm tốc độ biến mất (hạt sống lâu hơn)
+                    decay: Math.random() * 0.003 + 0.002,
                     size: Math.random() * 2 + 1,
                     color: Math.random() > 0.5 ? '#ffffff' : '#ffcc00'
                 });
@@ -185,7 +228,6 @@
             const centerY = canvas.height / 2;
             const cells = Array.from(document.querySelectorAll('.cell'));
             
-            // Tăng delay hút từng thẻ lên 40ms (Tổng thời gian hút 130 thẻ khoảng ~5.2 giây)
             cells.sort(() => Math.random() - 0.5).forEach((cell, index) => {
                 setTimeout(() => {
                     const rect = cell.getBoundingClientRect();
@@ -199,148 +241,67 @@
                 particles.forEach((p, i) => {
                     const dx = centerX - p.x;
                     const dy = centerY - p.y;
-                    
-                    // Lực hút vào tâm yếu hơn để hạt xoáy nhiều vòng (chia cho 300 thay vì 150)
                     p.vx += dx / 300;
                     p.vy += dy / 300;
-                    
                     p.x += p.vx;
                     p.y += p.vy;
                     p.life -= p.decay;
-
                     ctx.fillStyle = p.color;
                     ctx.globalAlpha = p.life;
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
                     ctx.fill();
-
                     if(p.life <= 0) particles.splice(i, 1);
                 });
-                
                 requestAnimationFrame(animate);
             }
             animate();
 
-            // Hiện logo sau 7 giây (đảm bảo đủ thời gian cho các thẻ hút hết)
             setTimeout(() => {
                 finalOverlay.classList.add('show');
                 finalOverlay.style.opacity = "1";
                 launchFinalFireworks();
-            }, 7000);
+            }, 7500);
         }
 
         function launchFinalFireworks() {
-    const duration = 18000;
-    const endTime = Date.now() + duration;
+            const duration = 15000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
 
-    const COLORS = [
-        '#ffffff', '#ffd700',
-        '#ff0000', '#ff4d00',
-        '#00e5ff', '#2979ff',
-        '#00e676'
-    ];
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
 
-    const base = {
-        zIndex: 4000,
-        ticks: 130,
-        gravity: 0.7,
-        scalar: 1.1
-    };
+            const interval = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
 
-    function fire(x, y, options = {}) {
-        confetti({
-            ...base,
-            origin: { x, y },
-            colors: COLORS,
-            ...options
-        });
-    }
-
-    /* =========================
-       PHASE 1 – SKY OPENING
-       (pháo đồng loạt mở màn)
-    ========================= */
-    for (let i = 0; i < 12; i++) {
-        setTimeout(() => {
-            fire(Math.random(), Math.random() * 0.5 + 0.1, {
-                particleCount: 180,
-                spread: 260,
-                startVelocity: 28,
-                scalar: 1
-            });
-        }, i * 220);
-    }
-
-    /* =========================
-       PHASE 2 – SKY BARRAGE
-       (bắn dồn dập toàn trời)
-    ========================= */
-    const barrage = setInterval(() => {
-        if (Date.now() > endTime) return clearInterval(barrage);
-
-        for (let i = 0; i < 3; i++) {
-            fire(
-                Math.random(),
-                Math.random() * 0.6,
-                {
-                    particleCount: 220,
-                    spread: 300,
-                    startVelocity: 34,
-                    scalar: 1.15
-                }
-            );
+                const particleCount = 50 * (timeLeft / duration);
+                confetti({...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+                confetti({...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+            }, 250);
         }
-    }, 900);
 
-    /* =========================
-       PHASE 3 – GOLDEN RAIN
-       (mưa ánh sáng quốc gia)
-    ========================= */
-    const rain = setInterval(() => {
-        if (Date.now() > endTime) return clearInterval(rain);
-
-        confetti({
-            particleCount: 14,
-            angle: 90,
-            spread: 180,
-            origin: { x: Math.random(), y: -0.1 },
-            colors: ['#ffd700', '#ffffff'],
-            gravity: 0.6,
-            scalar: 0.7,
-            zIndex: 4000
-        });
-    }, 40);
-
-    /* =========================
-       GRAND FINALE – SKY DOME
-       (đại kết toàn bầu trời)
-    ========================= */
-    setTimeout(() => {
-        for (let i = 0; i < 14; i++) {
-            setTimeout(() => {
-                fire(
-                    Math.random(),
-                    Math.random() * 0.75,
-                    {
-                        particleCount: 320,
-                        spread: 360,
-                        startVelocity: 45,
-                        scalar: 1.35
-                    }
-                );
-            }, i * 140);
-        }
-    }, duration - 4200);
-}
-
+        // Lắng nghe dữ liệu Firebase
         onSnapshot(query(collection(db, "user"), orderBy("id", "asc")), (snapshot) => {
             let activeCount = 0;
             snapshot.docs.forEach(doc => {
                 const data = doc.data();
                 const cell = userCells[data.id];
                 if (cell) {
-                    const img = cell.querySelector('img');
-                    if (data.url_images && img.src !== data.url_images) img.src = data.url_images;
+                    const img = cell.querySelector('.main-img');
+                    const bg = cell.querySelector('.blurred-bg');
+                    const nameEl = cell.querySelector('.user-name');
+
+                    if (data.url_images && img.src !== data.url_images) {
+                        img.src = data.url_images;
+                        // Gán ảnh cho lớp nền mờ
+                        bg.style.setProperty('--bg-url', `url('${data.url_images}')`);
+                    }
+
+                    if (data.user_name && nameEl.innerText !== data.user_name) {
+                        nameEl.innerText = data.user_name;
+                    }
+
                     if (data.is_active) {
                         cell.classList.add('active');
                         activeCount++;
@@ -350,14 +311,11 @@
 
             counterEl.innerText = `CHECK-IN: ${activeCount} / 130`;
 
-            if (activeCount >= 130 && !hasTriggered) {
+            if (activeCount >= 30 && !hasTriggered) {
                 hasTriggered = true;
-                setTimeout(runProEffect, 2000); // Đợi 1.5s sau khi đủ người mới bắt đầu xoáy
+                setTimeout(runProEffect, 2000);
             }
         });
     </script>
 </body>
 </html>
-
-
-
