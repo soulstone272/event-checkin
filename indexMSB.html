@@ -5,32 +5,36 @@
     <title>MSB Event - Professional Blurred Backdrop</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        body { 
-            background: radial-gradient(circle, #ff4d00, #cc3d00); 
-            margin: 0; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            overflow: hidden; 
-            font-family: 'Segoe UI', sans-serif; 
+        body {
+            background: radial-gradient(circle, #ff4d00, #cc3d00);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Segoe UI', sans-serif;
         }
-        
-        #main-wrapper { position: relative; width: 98vw; height: 95vh; }
 
-        .counter { 
-            position: absolute; 
-            top: 10px; 
-            left: 15px; 
-            color: #ffffff; 
-            font-size: 24px; 
+        #main-wrapper {
+            position: relative;
+            width: 98vw;
+            height: 95vh;
+        }
+
+        .counter {
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            color: #ffffff;
+            font-size: 24px;
             font-weight: bold;
-            z-index: 100; 
-            text-shadow: 0 0 10px rgba(0,0,0,0.5);
-            background: rgba(0,0,0,0.2);
+            z-index: 100;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.2);
             padding: 5px 15px;
             border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             transition: opacity 1s ease;
         }
 
@@ -44,37 +48,40 @@
             transition: all 2.5s ease-in-out;
         }
 
-        .cell { 
-            position: relative; 
-            background: rgba(255, 255, 255, 0.05); 
-            border-radius: 4px; 
-            perspective: 1000px; 
+        .cell {
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            perspective: 1000px;
         }
 
-        .cell-inner { 
-            position: relative; 
-            width: 100%; height: 100%; 
-            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
-            transform-style: preserve-3d; 
+        .cell-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
         }
 
-        .cell.active .cell-inner { transform: rotateY(180deg); }
-
-        .face { 
-            position: absolute; 
-            inset: 0; 
-            backface-visibility: hidden; 
-            border-radius: 4px; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            overflow: hidden; 
+        .cell.active .cell-inner {
+            transform: rotateY(180deg);
         }
 
-        .face-front { 
-            background: #ff4d00; 
-            color: #ffffff; 
-            font-size: 10px; 
+        .face {
+            position: absolute;
+            inset: 0;
+            backface-visibility: hidden;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .face-front {
+            background: #ff4d00;
+            color: #ffffff;
+            font-size: 10px;
             font-weight: bold;
             border: 1px solid rgba(255, 255, 255, 0.2);
             text-align: center;
@@ -82,11 +89,11 @@
         }
 
         /* PHẦN XỬ LÝ CHUYÊN NGHIỆP: FACE BACK */
-        .face-back { 
-            background: #000; 
-            transform: rotateY(180deg); 
+        .face-back {
+            background: #000;
+            transform: rotateY(180deg);
             border: 1px solid rgba(255, 255, 255, 0.6);
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
         }
 
         /* Lớp nền mờ phía sau */
@@ -102,17 +109,17 @@
         }
 
         /* Ảnh chính phía trước */
-        .main-img { 
+        .main-img {
             position: relative;
             z-index: 2;
-            width: 100%; 
-            height: 100%; 
+            width: 100%;
+            height: 100%;
             object-fit: contain; /* QUAN TRỌNG: Hiển thị đầy đủ ảnh không mất đầu */
         }
 
-        .cell.active .face-back { 
-            border: 1.5px solid #ffffff; 
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5); 
+        .cell.active .face-back {
+            border: 1.5px solid #ffffff;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
         }
 
         /* Hiệu ứng hút vào lỗ đen */
@@ -144,11 +151,14 @@
             transition: all 3s cubic-bezier(0.175, 0.885, 0.32, 1.1);
         }
 
-        #final-overlay.show #final-img { transform: scale(1); }
+        #final-overlay.show #final-img {
+            transform: scale(1);
+        }
 
         canvas#vortex {
             position: absolute;
-            top: 0; left: 0;
+            top: 0;
+            left: 0;
             pointer-events: none;
             z-index: 500;
         }
@@ -156,42 +166,49 @@
 </head>
 <body>
 
-    <div id="main-wrapper">
-        <canvas id="vortex"></canvas>
-        <div id="grid" class="grid-container"></div>
-        <div id="final-overlay">
-            <img src="https://firebasestorage.googleapis.com/v0/b/checkin-69311.firebasestorage.app/o/final.jpg?alt=media&token=2fd6e867-06ac-4344-bdf0-9b5a2dc3b309" id="final-img">
-        </div>
+<div id="main-wrapper">
+    <canvas id="vortex"></canvas>
+    <div id="grid" class="grid-container"></div>
+    <div id="final-overlay">
+        <img src="https://firebasestorage.googleapis.com/v0/b/checkin-69311.firebasestorage.app/o/final.jpg?alt=media&token=2fd6e867-06ac-4344-bdf0-9b5a2dc3b309"
+             id="final-img">
     </div>
+</div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+<script type="module">
+    import {initializeApp} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import {
+        getFirestore,
+        collection,
+        query,
+        orderBy,
+        onSnapshot
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAdmwwhCZh3MS7vM03MiL_FTIluqQNmFxo",
-            authDomain: "checkin-69311.firebaseapp.com",
-            projectId: "checkin-69311",
-            storageBucket: "checkin-69311.firebasestorage.app",
-            messagingSenderId: "682738949510",
-            appId: "1:682738949510:web:760eb6c7d591af6fb16007"
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+    const firebaseConfig = {
+        apiKey: "AIzaSyAdmwwhCZh3MS7vM03MiL_FTIluqQNmFxo",
+        authDomain: "checkin-69311.firebaseapp.com",
+        projectId: "checkin-69311",
+        storageBucket: "checkin-69311.firebasestorage.app",
+        messagingSenderId: "682738949510",
+        appId: "1:682738949510:web:760eb6c7d591af6fb16007"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-        const grid = document.getElementById('grid');
-        const counterEl = document.getElementById('checkin-counter');
-        const finalOverlay = document.getElementById('final-overlay');
-        const canvas = document.getElementById('vortex');
-        const ctx = canvas.getContext('2d');
-        const userCells = {};
-        let hasTriggered = false;
+    const grid = document.getElementById('grid');
+    const counterEl = document.getElementById('checkin-counter');
+    const finalOverlay = document.getElementById('final-overlay');
+    const canvas = document.getElementById('vortex');
+    const ctx = canvas.getContext('2d');
+    const userCells = {};
+    let hasTriggered = false;
 
-        // Khởi tạo lưới 130 ô
-        for (let i = 1; i <= 130; i++) {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            cell.innerHTML = `
+    // Khởi tạo lưới 130 ô
+    for (let i = 1; i <= 130; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.innerHTML = `
                 <div class="cell-inner">
                     <div class="face face-front user-name">Hạng mục ${i}</div>
                     <div class="face face-back">
@@ -200,179 +217,184 @@
                     </div>
                 </div>
             `;
-            grid.appendChild(cell);
-            userCells[i] = cell;
-        }
+        grid.appendChild(cell);
+        userCells[i] = cell;
+    }
 
-        // --- Logic hiệu ứng hạt Vortex (Giữ nguyên từ code cũ) ---
-        let particles = [];
-        function createParticles(x, y) {
-            for(let i=0; i<8; i++) {
-                particles.push({
-                    x, y,
-                    vx: (Math.random() - 0.5) * 6,
-                    vy: (Math.random() - 0.5) * 6,
-                    life: 1,
-                    decay: Math.random() * 0.003 + 0.002,
-                    size: Math.random() * 2 + 1,
-                    color: Math.random() > 0.5 ? '#ffffff' : '#ffcc00'
-                });
-            }
-        }
+    // --- Logic hiệu ứng hạt Vortex (Giữ nguyên từ code cũ) ---
+    let particles = [];
 
-        function runProEffect() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const cells = Array.from(document.querySelectorAll('.cell'));
-            
-            cells.sort(() => Math.random() - 0.5).forEach((cell, index) => {
-                setTimeout(() => {
-                    const rect = cell.getBoundingClientRect();
-                    createParticles(rect.left + rect.width/2, rect.top + rect.height/2);
-                    cell.classList.add('sucked');
-                }, index * 40); 
+    function createParticles(x, y) {
+        for (let i = 0; i < 8; i++) {
+            particles.push({
+                x, y,
+                vx: (Math.random() - 0.5) * 6,
+                vy: (Math.random() - 0.5) * 6,
+                life: 1,
+                decay: Math.random() * 0.003 + 0.002,
+                size: Math.random() * 2 + 1,
+                color: Math.random() > 0.5 ? '#ffffff' : '#ffcc00'
             });
+        }
+    }
 
-            function animate() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particles.forEach((p, i) => {
-                    const dx = centerX - p.x;
-                    const dy = centerY - p.y;
-                    p.vx += dx / 300;
-                    p.vy += dy / 300;
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.life -= p.decay;
-                    ctx.fillStyle = p.color;
-                    ctx.globalAlpha = p.life;
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
-                    ctx.fill();
-                    if(p.life <= 0) particles.splice(i, 1);
-                });
-                requestAnimationFrame(animate);
-            }
-            animate();
+    function runProEffect() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const cells = Array.from(document.querySelectorAll('.cell'));
 
+        cells.sort(() => Math.random() - 0.5).forEach((cell, index) => {
             setTimeout(() => {
-                finalOverlay.classList.add('show');
-                finalOverlay.style.opacity = "1";
-                launchFinalFireworks();
-            }, 7500);
+                const rect = cell.getBoundingClientRect();
+                createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2);
+                cell.classList.add('sucked');
+            }, index * 40);
+        });
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p, i) => {
+                const dx = centerX - p.x;
+                const dy = centerY - p.y;
+                p.vx += dx / 300;
+                p.vy += dy / 300;
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= p.decay;
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                if (p.life <= 0) particles.splice(i, 1);
+            });
+            requestAnimationFrame(animate);
         }
 
-       function launchFinalFireworks() {
-    const duration = 25 * 1000; // Cháy rực rỡ trong 25 giây
-    const animationEnd = Date.now() + duration;
-    
-    // Kích hoạt rung màn hình để tạo cảm giác chấn động (Impact)
-    const wrapper = document.getElementById('main-wrapper');
-    wrapper.style.animation = "heavyShake 0.1s infinite";
-    setTimeout(() => { wrapper.style.animation = "none"; }, 5000);
+        animate();
 
-    const interval = setInterval(function() {
-        const timeLeft = animationEnd - Date.now();
-        if (timeLeft <= 0) return clearInterval(interval);
+        setTimeout(() => {
+            finalOverlay.classList.add('show');
+            finalOverlay.style.opacity = "1";
+            launchFinalFireworks();
+        }, 7500);
+    }
 
-        // 1. HIỆU ỨNG PHÁO HOA "BÔNG CÚC" (Burst Bloom)
-        // Nổ mạnh, hạt to, tỏa tròn 360 độ ngẫu nhiên khắp màn hình
-        if (Math.random() > 0.7) {
+    function launchFinalFireworks() {
+        const duration = 25 * 1000;
+        const animationEnd = Date.now() + duration;
+
+        const wrapper = document.getElementById('main-wrapper');
+        wrapper.style.animation = "heavyShake 0.1s infinite";
+        setTimeout(() => {
+            wrapper.style.animation = "none";
+        }, 5000);
+
+        const interval = setInterval(function () {
+            const timeLeft = animationEnd - Date.now();
+            if (timeLeft <= 0) return clearInterval(interval);
+
+            // 1. HIỆU ỨNG PHÁO HOA "BÔNG CÚC" - Nổ khắp màn hình, đè lên ảnh
+            if (Math.random() > 0.7) {
+                confetti({
+                    particleCount: 150,
+                    spread: 360,
+                    startVelocity: 45,
+                    origin: {x: Math.random(), y: Math.random() - 0.2},
+                    colors: ['#ff4d00', '#ffd700', '#ffffff', '#ff0000'],
+                    shapes: ['circle', 'star'],
+                    scalar: 1.5,
+                    gravity: 0.7,
+                    ticks: 150,
+                    zIndex: 10001 // <--- SỬA: Đè lên trên ảnh
+                });
+            }
+
+            // 2. HIỆU ỨNG "NÚI LỬA VÀNG" - Phun trào từ dưới lên, phủ lên ảnh
             confetti({
-                particleCount: 150,
+                particleCount: 2,
+                angle: 60,
+                spread: 55,
+                origin: {x: 0, y: 1},
+                colors: ['#ffd700', '#ff4d00'],
+                startVelocity: 80,
+                zIndex: 10001 // <--- SỬA: Đè lên trên ảnh
+            });
+            confetti({
+                particleCount: 2,
+                angle: 120,
+                spread: 55,
+                origin: {x: 1, y: 1},
+                colors: ['#ffd700', '#ff4d00'],
+                startVelocity: 80,
+                zIndex: 10001 // <--- SỬA: Đè lên trên ảnh
+            });
+
+            // 3. HIỆU ỨNG "TÂM ĐIỂM" - Bắn NGAY TRÊN tấm ảnh
+            // (Tạo cảm giác pháo hoa bắn ra từ chính giữa bức hình)
+            confetti({
+                particleCount: 15,
                 spread: 360,
-                startVelocity: 45,
-                origin: { x: Math.random(), y: Math.random() - 0.2 },
-                colors: ['#ff4d00', '#ffd700', '#ffffff', '#ff0000'],
-                shapes: ['circle', 'star'],
-                scalar: 1.5, // Hạt to rõ nét
-                gravity: 0.7,
-                ticks: 150
+                origin: {x: 0.5, y: 0.5},
+                colors: ['#ffffff', '#ffcc00', '#ff4d00'],
+                startVelocity: 40,
+                ticks: 150,
+                gravity: 0.6,
+                scalar: 1.2,
+                zIndex: 10001 // <--- SỬA: Phủ lên bề mặt ảnh
             });
-        }
 
-        // 2. HIỆU ỨNG "NÚI LỬA VÀNG" (Gold Fountain)
-        // Phun trào liên tục từ hai bên góc dưới, đan xen vào giữa
-        confetti({
-            particleCount: 2,
-            angle: 60,
-            spread: 55,
-            origin: { x: 0, y: 1 },
-            colors: ['#ffd700', '#ff4d00'],
-            startVelocity: 80
-        });
-        confetti({
-            particleCount: 2,
-            angle: 120,
-            spread: 55,
-            origin: { x: 1, y: 1 },
-            colors: ['#ffd700', '#ff4d00'],
-            startVelocity: 80
-        });
+            // 4. HIỆU ỨNG "SAO SA" - Bụi kim tuyến rơi đè lên mặt ảnh
+            confetti({
+                particleCount: 5,
+                origin: {x: Math.random(), y: -0.1},
+                colors: ['#ffffff', '#ffd700'],
+                gravity: 0.2,
+                startVelocity: 0,
+                ticks: 500,
+                scalar: 0.7,
+                zIndex: 10001 // <--- SỬA: Rơi phủ lên ảnh
+            });
 
-        // 3. HIỆU ỨNG "HÀO QUANG TRUNG TÂM" (Photo Halo)
-        // Bắn từ phía sau ảnh tỏa ra để làm nổi bật tấm ảnh Final
-        confetti({
-            particleCount: 10,
-            spread: 360,
-            origin: { x: 0.5, y: 0.5 },
-            colors: ['#ffffff', '#ffcc00'],
-            startVelocity: 30,
-            ticks: 100,
-            gravity: 0.4, // Rơi rất chậm
-            zIndex: -1 // Chạy sau ảnh
-        });
+        }, 150);
+    }
 
-        // 4. HIỆU ỨNG "SAO SA" (Shimmering Rain)
-        // Các hạt nhỏ li ti, lấp lánh như bụi kim tuyến rơi từ trên đỉnh
-        confetti({
-            particleCount: 5,
-            origin: { x: Math.random(), y: -0.1 },
-            colors: ['#ffffff', '#ffd700'],
-            gravity: 0.2, // Rơi siêu chậm như tuyết
-            startVelocity: 0,
-            ticks: 500,
-            scalar: 0.5
-        });
+    // Lắng nghe dữ liệu Firebase
+    onSnapshot(query(collection(db, "user"), orderBy("id", "asc")), (snapshot) => {
+        let activeCount = 0;
+        snapshot.docs.forEach(doc => {
+            const data = doc.data();
+            const cell = userCells[data.id];
+            if (cell) {
+                const img = cell.querySelector('.main-img');
+                const bg = cell.querySelector('.blurred-bg');
+                const nameEl = cell.querySelector('.user-name');
 
-    }, 150);
-}
-
-        // Lắng nghe dữ liệu Firebase
-        onSnapshot(query(collection(db, "user"), orderBy("id", "asc")), (snapshot) => {
-            let activeCount = 0;
-            snapshot.docs.forEach(doc => {
-                const data = doc.data();
-                const cell = userCells[data.id];
-                if (cell) {
-                    const img = cell.querySelector('.main-img');
-                    const bg = cell.querySelector('.blurred-bg');
-                    const nameEl = cell.querySelector('.user-name');
-
-                    if (data.url_images && img.src !== data.url_images) {
-                        img.src = data.url_images;
-                        // Gán ảnh cho lớp nền mờ
-                        bg.style.setProperty('--bg-url', `url('${data.url_images}')`);
-                    }
-
-                    if (data.user_name && nameEl.innerText !== data.user_name) {
-                        nameEl.innerText = data.user_name;
-                    }
-
-                    if (data.is_active) {
-                        cell.classList.add('active');
-                        activeCount++;
-                    }
+                if (data.url_images && img.src !== data.url_images) {
+                    img.src = data.url_images;
+                    // Gán ảnh cho lớp nền mờ
+                    bg.style.setProperty('--bg-url', `url('${data.url_images}')`);
                 }
-            });
 
+                if (data.user_name && nameEl.innerText !== data.user_name) {
+                    nameEl.innerText = data.user_name;
+                }
 
-            if (activeCount >= 30 && !hasTriggered) {
-                hasTriggered = true;
-                setTimeout(runProEffect, 2000);
+                if (data.is_active) {
+                    cell.classList.add('active');
+                    activeCount++;
+                }
             }
         });
-    </script>
+
+
+        if (activeCount >= 30 && !hasTriggered) {
+            hasTriggered = true;
+            setTimeout(runProEffect, 2000);
+        }
+    });
+</script>
 </body>
 </html>
