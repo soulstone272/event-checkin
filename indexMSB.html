@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>MSB Event</title>
+    <title>MSB Event - Professional Blurred Backdrop</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body { 
@@ -221,7 +221,6 @@
         }
 
         function runProEffect() {
-            counterEl.style.opacity = "0"; 
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             const centerX = canvas.width / 2;
@@ -264,22 +263,81 @@
             }, 7500);
         }
 
-        function launchFinalFireworks() {
-            const duration = 15000;
-            const animationEnd = Date.now() + duration;
-            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+       function launchFinalFireworks() {
+    const duration = 25 * 1000; // Cháy rực rỡ trong 25 giây
+    const animationEnd = Date.now() + duration;
+    
+    // Kích hoạt rung màn hình để tạo cảm giác chấn động (Impact)
+    const wrapper = document.getElementById('main-wrapper');
+    wrapper.style.animation = "heavyShake 0.1s infinite";
+    setTimeout(() => { wrapper.style.animation = "none"; }, 5000);
 
-            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+    const interval = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+        if (timeLeft <= 0) return clearInterval(interval);
 
-            const interval = setInterval(function() {
-                const timeLeft = animationEnd - Date.now();
-                if (timeLeft <= 0) return clearInterval(interval);
-
-                const particleCount = 50 * (timeLeft / duration);
-                confetti({...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
-                confetti({...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
-            }, 250);
+        // 1. HIỆU ỨNG PHÁO HOA "BÔNG CÚC" (Burst Bloom)
+        // Nổ mạnh, hạt to, tỏa tròn 360 độ ngẫu nhiên khắp màn hình
+        if (Math.random() > 0.7) {
+            confetti({
+                particleCount: 150,
+                spread: 360,
+                startVelocity: 45,
+                origin: { x: Math.random(), y: Math.random() - 0.2 },
+                colors: ['#ff4d00', '#ffd700', '#ffffff', '#ff0000'],
+                shapes: ['circle', 'star'],
+                scalar: 1.5, // Hạt to rõ nét
+                gravity: 0.7,
+                ticks: 150
+            });
         }
+
+        // 2. HIỆU ỨNG "NÚI LỬA VÀNG" (Gold Fountain)
+        // Phun trào liên tục từ hai bên góc dưới, đan xen vào giữa
+        confetti({
+            particleCount: 2,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0, y: 1 },
+            colors: ['#ffd700', '#ff4d00'],
+            startVelocity: 80
+        });
+        confetti({
+            particleCount: 2,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1, y: 1 },
+            colors: ['#ffd700', '#ff4d00'],
+            startVelocity: 80
+        });
+
+        // 3. HIỆU ỨNG "HÀO QUANG TRUNG TÂM" (Photo Halo)
+        // Bắn từ phía sau ảnh tỏa ra để làm nổi bật tấm ảnh Final
+        confetti({
+            particleCount: 10,
+            spread: 360,
+            origin: { x: 0.5, y: 0.5 },
+            colors: ['#ffffff', '#ffcc00'],
+            startVelocity: 30,
+            ticks: 100,
+            gravity: 0.4, // Rơi rất chậm
+            zIndex: -1 // Chạy sau ảnh
+        });
+
+        // 4. HIỆU ỨNG "SAO SA" (Shimmering Rain)
+        // Các hạt nhỏ li ti, lấp lánh như bụi kim tuyến rơi từ trên đỉnh
+        confetti({
+            particleCount: 5,
+            origin: { x: Math.random(), y: -0.1 },
+            colors: ['#ffffff', '#ffd700'],
+            gravity: 0.2, // Rơi siêu chậm như tuyết
+            startVelocity: 0,
+            ticks: 500,
+            scalar: 0.5
+        });
+
+    }, 150);
+}
 
         // Lắng nghe dữ liệu Firebase
         onSnapshot(query(collection(db, "user"), orderBy("id", "asc")), (snapshot) => {
@@ -309,7 +367,6 @@
                 }
             });
 
-            counterEl.innerText = `CHECK-IN: ${activeCount} / 130`;
 
             if (activeCount >= 30 && !hasTriggered) {
                 hasTriggered = true;
@@ -319,4 +376,3 @@
     </script>
 </body>
 </html>
-
