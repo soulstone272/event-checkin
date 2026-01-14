@@ -23,9 +23,9 @@
 
 <div class="container">
     <h2>CHECK-IN</h2>
-    <p>Nhập đúng tên User để sáng đèn</p>
+    <p>Nhập đúng tên User để check-in</p>
     
-    <input type="text" id="inputName" placeholder="Tên user Msb" autocomplete="off">
+    <input type="text" id="inputName" placeholder="Tên user MSB" autocomplete="off">
     <button id="btnCheckin">XÁC NHẬN</button>
     
     <div id="message"></div>
@@ -55,7 +55,7 @@
     const message = document.getElementById('message');
 
     async function processCheckin() {
-        const name = inputName.value.trim();
+        const name = inputName.value.trim().toLowerCase();
         if (!name) return;
 
         // Khóa nút để tránh bấm liên tục
@@ -104,4 +104,5 @@
 </body>
 
 </html>
+
 
