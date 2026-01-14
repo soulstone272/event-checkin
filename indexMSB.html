@@ -163,6 +163,10 @@
 <audio id="bg-music" preload="auto" loop>
     <source src="https://firebasestorage.googleapis.com/v0/b/checkin-69311.firebasestorage.app/o/music%2FDisfigure%20-%20Blank%20%5BNCS%20Release%5D.mp3?alt=media&token=4d9052f0-8cb3-4c37-b1d9-d922d0b7bf4d" type="audio/mpeg">
 </audio>
+<audio id="impact-music" preload="auto">
+    <source src="https://firebasestorage.googleapis.com/v0/b/checkin-69311.firebasestorage.app/o/music%2FElektronomia%20-%20Sky%20High%20%5BNCS%20Release%5D.mp3?alt=media"
+            type="audio/mpeg">
+</audio>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
@@ -259,6 +263,7 @@
     }
 
     function runProEffect() {
+		startVortexMusic();
         const centerX = innerWidth/2;
         const centerY = innerHeight/2;
         animateVortex(centerX, centerY);
@@ -273,9 +278,10 @@
         });
 
         setTimeout(() => {
-            document.getElementById('final-overlay').classList.add('show');
-            launchFireworks();
-        }, 7500);
+        impactMusic.volume = 0.85; // 💥 DROP
+        document.getElementById('final-overlay').classList.add('show');
+        launchFireworks();
+		}, 7500);
     }
 
     function launchFireworks() {
@@ -325,19 +331,51 @@
     });
 	
 	const bgMusic = document.getElementById('bg-music');
+	const impactMusic = document.getElementById('impact-music');
 
-function startBackgroundMusic() {
-    bgMusic.volume = 0.4;   // nền → nhỏ hơn
-    bgMusic.play().catch(() => {
-        console.log("Chờ tương tác người dùng để play nhạc");
-    });
-}
+	function startBackgroundMusic() {
+		bgMusic.volume = 0.4;   // nền → nhỏ hơn
+		bgMusic.play().catch(() => {
+			console.log("Chờ tương tác người dùng để play nhạc");
+		});
+	}
 
-document.addEventListener('click', () => {
-    if (bgMusic.paused) {
-        startBackgroundMusic();
-    }
-}, { once: true });
+	document.addEventListener('click', () => {
+		if (bgMusic.paused) {
+			startBackgroundMusic();
+		}
+	}, { once: true });
+	
+	function fadeOut(audio, duration = 1200) {
+    const step = audio.volume / (duration / 50);
+    const timer = setInterval(() => {
+        audio.volume = Math.max(0, audio.volume - step);
+        if (audio.volume <= 0) {
+            clearInterval(timer);
+            audio.pause();
+        }
+		}, 50);
+	}
+	
+	function fadeIn(audio, target = 0.35, duration = 1200) {
+    audio.volume = 0;
+    audio.play().catch(()=>{});
+    const step = target / (duration / 50);
+    const timer = setInterval(() => {
+        audio.volume = Math.min(target, audio.volume + step);
+        if (audio.volume >= target) clearInterval(timer);
+		}, 50);
+	}
+	
+	function startVortexMusic() {
+    fadeOut(bgMusic, 1200);
+
+    impactMusic.currentTime = 40; // đoạn tụ sáng Sky High
+    fadeIn(impactMusic, 0.35, 1200);
+	}
+	
+		
 </script>
 </body>
 </html>
+
