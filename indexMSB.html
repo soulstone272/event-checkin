@@ -160,6 +160,10 @@
     </div>
 </div>
 
+<audio id="bg-music" preload="auto" loop>
+    <source src="https://firebasestorage.googleapis.com/v0/b/checkin-69311.firebasestorage.app/o/music%2FDisfigure%20-%20Blank%20%5BNCS%20Release%5D.mp3?alt=media&token=4d9052f0-8cb3-4c37-b1d9-d922d0b7bf4d" type="audio/mpeg">
+</audio>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { getFirestore, collection, query, orderBy, onSnapshot }
@@ -314,11 +318,26 @@
             }
         });
 
-        if (active >= 60 && !hasTriggered) {
+        if (active >= 130 && !hasTriggered) {
             hasTriggered = true;
             setTimeout(runProEffect, 2000);
         }
     });
+	
+	const bgMusic = document.getElementById('bg-music');
+
+function startBackgroundMusic() {
+    bgMusic.volume = 0.4;   // nền → nhỏ hơn
+    bgMusic.play().catch(() => {
+        console.log("Chờ tương tác người dùng để play nhạc");
+    });
+}
+
+document.addEventListener('click', () => {
+    if (bgMusic.paused) {
+        startBackgroundMusic();
+    }
+}, { once: true });
 </script>
 </body>
 </html>
